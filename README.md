@@ -50,7 +50,7 @@ Ichthus Development intentionally mixes **VB.NET** and **C#** within the same so
 
 > **All public APIs must look natural, intentional, and idiomatic when consumed from both VB.NET and C#.**
 
-Language-specific tricks must never leak into shared contracts.
+Language-specific features must not leak into shared contracts.
 
 ---
 
@@ -141,9 +141,55 @@ Rationale:
 
 ---
 
-## 5. Code Documentation
+### 4.4 Internal vs External Serialization Conventions
 
-### 5.1 XML Documentation Comments
+- Internal models should follow Ichthus naming conventions (PascalCase, ALL-CAPS acronyms).
+- External serialization formats (e.g., JSON for public APIs) may adapt naming conventions as required for interoperability.
+- Serialization naming differences must be explicit and intentional, not implicit or ad-hoc.
+
+Rationale:
+- Preserves internal clarity without sacrificing external compatibility.
+
+---
+
+## 5. Code Structure & Architectural Preferences
+
+### 5.1 Variable Declaration Style
+
+- Local variables should be declared at the beginning of a method whenever practical.
+- Variables scoped to blocks may be declared early and initialized to `Nothing` or an empty value.
+- Exceptions are permitted when early returns prevent unnecessary allocation.
+
+Rationale:
+- Improves scanability
+- Reduces mid-method cognitive load
+
+---
+
+### 5.2 Data Access and Object Design
+
+- Centralized data access patterns are preferred.
+- Lazy-loaded properties are acceptable when they improve performance or clarity.
+- Attribute-based mapping and serialization control are preferred over convention-only approaches.
+
+---
+
+### 5.3 Type Semantics
+
+- Prefer rich types (e.g., `FileInfo`) over primitive representations (e.g., file paths as strings) when behavior matters.
+
+---
+
+### 5.4 Server-Side Technology Preference
+
+- ASP.NET is the preferred platform for server-side logic and validation.
+- Other technologies may be used only when constraints require it.
+
+---
+
+## 6. Code Documentation
+
+### 6.1 XML Documentation Comments
 
 - XML documentation comments are required for all public types and members
 - Internal members should be documented where intent is not obvious
@@ -155,7 +201,7 @@ Rationale:
 
 ---
 
-### 5.2 Comment Philosophy
+### 6.2 Comment Philosophy
 
 - Comments should explain why, not what
 - Redundant comments are discouraged
@@ -163,17 +209,17 @@ Rationale:
 
 ---
 
-## 6. Code Organization
+## 7. Code Organization
 
-### 6.1 `#Region` (VB.NET) and `#region` (C#) Usage
+### 7.1 `#Region` (VB.NET) and `#region` (C#) Usage
 
 - `#Region` blocks are used intentionally to organize:
   - Public properties
   - Private fields
   - Constructors
-  - Public Methods
-  - Private Methods
-  - Event Handlers
+  - Public methods
+  - Private methods
+  - Event handlers
 
 Rationale:
 - Improves navigability in large files (code folding in IDE)
@@ -182,9 +228,9 @@ Rationale:
 
 ---
 
-## 7. Error Handling and Diagnostics
+## 8. Error Handling and Diagnostics
 
-### 7.1 Diagnostics over Exceptions
+### 8.1 Diagnostics over Exceptions
 
 Libraries should:
 - Prefer structured diagnostics over throwing exceptions
@@ -192,7 +238,7 @@ Libraries should:
 
 ---
 
-### 7.2 Severity Model
+### 8.2 Severity Model
 
 Diagnostics use a shared severity model:
 - Information
@@ -205,11 +251,11 @@ Severity models should be consistent across all Ichthus projects.
 
 ---
 
-## 8. UI Separation
+## 9. UI Separation
 
 Rules:
 - No UI code in Core or shared libraries
-- No `MessageBox, dialogs, or UI callbacks in reusable logic
+- No `MessageBox`, dialogs, or UI callbacks in reusable logic
 - Libraries must be safe for headless and server-side execution
 
 Rationale:
@@ -219,7 +265,7 @@ Rationale:
 
 ---
 
-## 9. Data Handling Philosophy
+## 10. Data Handling Philosophy
 
 - Prefer immutable or read-only data structures where practical
 - Preserve raw input alongside parsed or transformed representations
@@ -227,7 +273,7 @@ Rationale:
 
 ---
 
-## 10. Conscious Deviations from Common Best Practices
+## 11. Conscious Deviations from Common Best Practices
 
 As defined above, Ichthus Development intentionally deviates from some mainstream .NET conventions.
 
@@ -251,7 +297,7 @@ These choices exist to improve:
 
 ---
 
-## 11. Living Document
+## 12. Living Document
 
 This document is expected to evolve.
 
