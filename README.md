@@ -89,6 +89,101 @@ Ichthus.Text.JSON.Core
 
 ---
 
+### 3.3 Namespace Stability and Versioning
+
+Namespaces are treated as part of the public API surface.
+
+Rules:
+- Public namespaces must be considered stable once released
+- Moving a public type to a different namespace is a breaking change
+- Namespace refactors require explicit versioning or migration strategy
+
+Rationale:
+- Namespaces communicate domain ownership and responsibility
+- Consumers bind to namespaces implicitly through imports/usings
+- Treating namespaces as disposable leads to silent downstream breakage
+
+### 3.4 Namespace Semantics
+
+Certain namespaces within Ichthus carry **architectural meaning**, not just organizational grouping.
+
+These namespaces communicate responsibility and intent and must be used consistently.
+
+#### 3.4.1 `Core`
+- Dependency-safe contracts
+- Stable domain abstractions
+- No external or implementation-specific dependencies
+
+#### 3.4.2 `IO`
+- Stream-based or persistence-oriented operations
+- Files, sockets, buffers, or durable data sinks/sources
+- Implies seek/read/write semantics
+
+Examples:
+- File readers/writers
+- Network streams
+- Memory-backed buffers
+
+#### 3.4.3 `Console`
+- Interactive, presentation-oriented output
+- Human-facing input/output
+- Not assumed to be durable or stream-seekable
+
+Examples:
+- Console writers
+- Menu systems
+- Interactive prompts
+
+#### 3.4.4 `Diagnostics`
+- Structured reporting of non-fatal conditions, validation issues, and system observations
+- Not responsible for presentation or persistence
+- May be consumed by logging, UI, telemetry, or test harnesses
+
+Diagnostics represent facts; interpretation is the responsibility of the consumer.
+
+#### 3.4.5 `Text`
+- Textual data handling, parsing, tokenization, and transformation
+- Format-aware but transport-agnostic
+- Does not imply persistence, IO, or UI concerns
+
+Examples:
+- Parsers
+- Tokenizers
+- Format grammars
+
+#### 3.4.6 `Policies`
+- Behavioral rules and decision models
+- No execution logic
+- Used to influence how other components behave
+
+Policies define *what should happen*, not *how it happens*.
+
+#### 3.4.7 `Security`
+- Security-sensitive utilities and abstractions
+- Explicit, opt-in usage
+- No silent encryption, hashing, or obfuscation
+
+All security behavior must be visible at the call site.
+
+#### 3.4.8 `Cryptography`
+- Cryptographic primitives and transformations
+- Explicit encryption, decryption, signing, verification, and hashing operations
+- No implicit key management, storage, or policy decisions
+
+Cryptographic operations must be:
+- Explicit at the call site
+- Opt-in
+- Transparent in intent
+
+#### 3.4.9 Other Domain Namespaces
+Additional namespaces (e.g., `EDI`, `JSON`, `HTTP`) must define a clear responsibility boundary and should not overlap in purpose.
+
+Namespaces such as Utilities, Helpers, or Common are discouraged and should be treated as refactoring waypoints, not architectural destinations.
+
+Poorly defined namespaces must be corrected rather than compensated for with verbose type names.
+
+---
+
 ## 4. Naming Conventions
 
 ### 4.1 Acronyms and Initialisms
@@ -152,6 +247,110 @@ Rationale:
 
 ---
 
+### 4.5 Domain-Oriented Naming and Namespace Responsibility
+
+Ichthus Development favors **domain-oriented namespaces** over redundant type prefixes.
+
+#### 4.5.1 Namespace Carries Semantic Weight
+
+When a type exists within a clearly defined domain namespace, **the namespace—not the type name—carries the primary semantic meaning**.
+
+Redundant repetition of the domain name in type identifiers is discouraged.
+
+Example:
+
+```vbnet
+Namespace Ichthus.EDI
+    Public Interface IDelimiterDetector
+End Namespace
+```
+
+Preferred usage:
+
+```vbnet
+Dim detector As IDelimiterDetector
+```
+
+Avoid:
+
+```vbnet
+IEDIDelimiterDetector
+```
+
+Rationale:
+- Reduces visual noise
+- Improves readability
+- Encourages meaningful namespace design
+- Prevents "stuttering" identifiers (`EDI.EDIDelimiterDetector`)
+
+---
+
+#### 4.5.2 When Domain Prefixes Are Acceptable
+
+Domain prefixes may be retained only when the concept itself is cross-domain or taxonomy-like, and may reasonably appear outside its defining namespace.
+
+Example:
+
+```vbnet
+Public Enum EDIFormat
+    Unknown
+    X12
+    EDIFACT
+End Enum
+```
+
+Rationale:
+- `Format` alone is ambiguous across domains
+- `EDIFormat` may appear in diagnostics, UI, metadata, or logging contexts
+- Prefix improves clarity when consumed outside `Ichthus.EDI`
+
+This exception is intentional and limited.
+
+---
+
+#### 4.5.3 Explicit Qualification Over Renaming
+
+When name collisions occur across domains (e.g., `Writer`, `Reader`, `Parser`), explicit qualification or aliasing is preferred over renaming types.
+
+Examples:
+
+**VB.NET:**
+
+```vbnet
+Imports EDIWriter = Ichthus.EDI.IO.Writer
+Imports ConsoleWriter = Ichthus.Console.Writer
+```
+
+**C#**
+
+```csharp
+using EDIWriter = Ichthus.EDI.IO.Writer;
+using ConsoleWriter = Ichthus.Console.Writer;
+```
+
+Rationale:
+- Preserves clean, intention-revealing type names
+- Avoids artificial suffixes (`EDIWriter`, `ConsoleWriter`)
+- Keeps APIs natural and idiomatic
+- Leverages language features instead of encoding context into names
+
+*Type aliasing is considered a first-class language feature and an intentional part of Ichthus API consumption patterns.*
+
+---
+
+#### 4.5.4 Design Implication
+
+This convention places higher importance on namespace architecture.
+
+As a result:
+- Namespaces must be intentional
+- Namespace boundaries define responsibility
+- Type names should remain concise, descriptive, and domain-local
+
+*Poorly designed namespaces are not compensated for with verbose type names.*
+
+---
+
 ## 5. Code Structure & Architectural Preferences
 
 ### 5.1 Variable Declaration Style
@@ -171,6 +370,8 @@ Rationale:
 - Centralized data access patterns are preferred.
 - Lazy-loaded properties are acceptable when they improve performance or clarity.
 - Attribute-based mapping and serialization control are preferred over convention-only approaches.
+
+*Framework-specific abstractions must not leak into Core or domain contracts.*
 
 ---
 
@@ -235,6 +436,16 @@ Rationale:
 Libraries should:
 - Prefer structured diagnostics over throwing exceptions
 - Reserve exceptions for unrecoverable or truly exceptional conditions
+
+Decision Boundary:
+- Libraries emit diagnostics and continue execution where possible
+- Consumers are responsible for interpreting diagnostics
+- Escalation (e.g., throwing exceptions) is a policy decision, not a library default
+
+This allows:
+- Batch processing without hard failure
+- Partial success scenarios
+- Environment-specific strictness (development vs production)
 
 ---
 
