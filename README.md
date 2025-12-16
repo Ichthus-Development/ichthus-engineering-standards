@@ -1,4 +1,6 @@
-# Ichthus Coding Conventions & Design Rationale
+<p align="right"><img width="120" height="96" alt="Ichthus Development logo" src="https://github.com/user-attachments/assets/acf27b44-5bb3-474c-ac0b-3d4ac58d9bbe" /></p>
+
+# Ichthus Development Coding Conventions & Design Rationale
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
@@ -125,7 +127,7 @@ Rationale:
 
 ### 4.4 Namespace Semantics
 
-Certain namespaces within Ichthus carry **architectural meaning**, not just organizational grouping.
+Certain namespaces within the Ichthus root namespace carry **architectural meaning**, not just organizational grouping.
 
 These namespaces communicate responsibility and intent and must be used consistently.
 
@@ -266,7 +268,7 @@ Rationale:
 
 ### 5.4 Internal vs External Serialization Conventions
 
-- Internal models should follow Ichthus naming conventions (PascalCase, ALL-CAPS acronyms).
+- Internal models should follow Ichthus Development naming conventions (PascalCase, ALL-CAPS acronyms).
 - External serialization formats (e.g., JSON for public APIs) may adapt naming conventions as required for interoperability.
 - Serialization naming differences must be explicit and intentional, not implicit or ad-hoc.
 
@@ -396,7 +398,7 @@ Rationale:
 - Keeps APIs natural and idiomatic
 - Leverages language features instead of encoding context into names
 
-*Type aliasing is considered a first-class language feature and an intentional part of Ichthus API consumption patterns.*
+*Type aliasing is considered a first-class language feature and an intentional part of Ichthus Development API consumption patterns.*
 
 ---
 
@@ -559,7 +561,7 @@ Diagnostics use a shared severity model:
 - Critical
 - Fatal
 
-Severity models should be consistent across all Ichthus projects.
+Severity models should be consistent across all Ichthus Development projects.
 
 ---
 
@@ -673,6 +675,6 @@ This documentation is licensed under the Creative Commons Attribution 4.0 Intern
 
 ---
 
-_Ichthus Engineering Standards exist to serve understanding, not fashion._
+_Ichthus Development Engineering and Coding Standards exist to serve understanding, not fashion._
 
 © Gold Fish Bowl, LLC - DBA Ichthus Development
