@@ -27,6 +27,8 @@ This document intentionally does not attempt to:
   These standards apply forward-looking unless otherwise documented.
 - Guarantee performance, security, or correctness by their existence alone  
   Standards guide design and review; they do not replace engineering judgment, testing, or validation.
+- Define organizational values or ethics  
+  Organizational principles are defined separately (see the Babbagic Code).
 
 ## Relationship to Industry Best Practices
 
@@ -64,6 +66,8 @@ These principles override tooling trends, framework fashion, and external style 
 
    Tooling may enhance productivity, but it MUST NOT be required to understand intent.
 
+   This principle informs naming (§5), documentation (§7), and SQL standards (§13).
+
 These standards are informed by the principles articulated in the Gold Fish Bowl Babbagic Code.
 
 ---
@@ -81,7 +85,7 @@ These terms are used intentionally to enable future mechanical enforcement throu
 Lowercase must / should / may are descriptive prose only.  
 Uppercase MUST / SHOULD / MAY define enforceable rules.
 
-Use of the term "preferred" indicates a strong default, not a prohibition.
+Usage of the terms "preferred" and "discouraged" indicate a strong default, not a prohibition.
 
 For the purposes of this document, "public API" refers to any type, member, schema, or contract intended for consumption outside its defining assembly, project, or bounded context.
 
@@ -800,6 +804,8 @@ The goal is to ensure that non-obvious design decisions are not mistaken for acc
 
 Code that implements external constraints without documenting their origin is considered incomplete.
 
+Refer to §2 ("public API") and §12 (Concious Deviations) for further, detailed explanations.
+
 ---
 
 ## 8. Code Organization
@@ -845,6 +851,12 @@ Examples:
 
 Avoid: throwing for expected, recoverable conditions
 
+**VB.NET**
+
+```vbnet
+Throw New InvalidOperationException("Invalid record format")
+```
+
 **C#**
 
 ```csharp
@@ -852,6 +864,15 @@ throw new InvalidOperationException("Invalid record format");
 ```
 
 Prefer: emitting diagnostics and continuing
+
+**VB.NET**
+
+```vbnet
+diagnostics.Add(Diagnostic.Error(
+    code: "INVALID_FORMAT",
+    message: "Record format does not match expected schema"
+))
+```
 
 **C#**
 
@@ -861,6 +882,7 @@ diagnostics.Add(Diagnostic.Error(
     message: "Record format does not match expected schema"
 ));
 ```
+
 ---
 
 ### 9.2 Severity Model
