@@ -5,9 +5,28 @@
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC%20BY%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 
 > **Purpose**  
-> This document defines the engineering standards, coding conventions, architectural guidelines, and deliberate deviations from common industry “best practices” used across **all projects developed under Ichthus Development**.  
+> This document defines the engineering standards, coding conventions, architectural guidelines, and deliberate deviations from common industry "best practices" used across **all projects developed under Ichthus Development**.  
 >
 > Its purpose is to ensure clarity, consistency, and long-term maintainability across a mixed-language (.NET) ecosystem, while favoring explicit design and intentional tradeoffs over trend-driven convention.
+
+## Non-Goals
+
+This document intentionally does not attempt to:
+
+- Serve as an exhaustive language reference or tutorial  
+  These standards assume baseline professional competence in the languages and platforms being used.
+- Replace official language, framework, or platform documentation  
+  Vendor and standards-body documentation remains authoritative for syntax, runtime behavior, and compliance details.
+- Prescribe stylistic preferences for every language or framework  
+  Only conventions with architectural, maintainability, or cross-language impact are specified here.
+- Dictate implementation details where multiple correct approaches exist  
+  This document defines boundaries, contracts, and expectations—not micromanaged implementations.
+- Enforce personal or aesthetic preferences unrelated to clarity, correctness, or maintainability  
+  Rules exist to improve understanding and reduce ambiguity, not to satisfy stylistic taste.
+- Retroactively rewrite legacy code to conform unless actively modified  
+  These standards apply forward-looking unless otherwise documented.
+- Guarantee performance, security, or correctness by their existence alone  
+  Standards guide design and review; they do not replace engineering judgment, testing, or validation.
 
 ## Relationship to Industry Best Practices
 
@@ -43,7 +62,9 @@ These principles override tooling trends, framework fashion, and external style 
 
    Naming conventions, formatting, and structure are chosen to preserve semantic clarity when viewed in plain text editors or minimal environments.
 
-   Tooling may enhance productivity, but it must not be required to understand intent.
+   Tooling may enhance productivity, but it MUST NOT be required to understand intent.
+
+These standards are informed by the principles articulated in the Gold Fish Bowl Babbagic Code.
 
 ---
 
@@ -61,6 +82,8 @@ Lowercase must / should / may are descriptive prose only.
 Uppercase MUST / SHOULD / MAY define enforceable rules.
 
 Use of the term "preferred" indicates a strong default, not a prohibition.
+
+For the purposes of this document, "public API" refers to any type, member, schema, or contract intended for consumption outside its defining assembly, project, or bounded context.
 
 ---
 
@@ -97,7 +120,7 @@ Language-specific features MUST NOT leak into shared contracts or public abstrac
 
 Rationale:
 - Eliminates VB/C# impedance mismatch
-- Prevents “hidden” namespace concatenation
+- Prevents "hidden" namespace concatenation
 - Makes public API shape explicit and predictable
 
 ---
@@ -120,6 +143,8 @@ Example:
 ```
 Ichthus.Text.JSON.Core
 ```
+
+For the purposes of this document, `Core` refers to both a conceptual architectural boundary and, where applicable, a physical project or assembly boundary.
 
 ---
 
@@ -399,7 +424,7 @@ When name collisions occur across domains (e.g., `Writer`, `Reader`, `Parser`), 
 
 Examples:
 
-**VB.NET:**
+**VB.NET**
 
 ```vbnet
 Imports EDIWriter = Ichthus.EDI.IO.Writer
@@ -474,6 +499,8 @@ Controls SHOULD be prefixed according to their concrete type:
 
 Prefixes MUST reflect the actual control type, not semantic intent.
 
+> NOTE: This convention is retained for WinForms due to its event-driven, designer-generated architecture and is intentionally not extended to declarative or binding-based UI frameworks.
+
 #### Scope and Limitations
 
 - This convention MUST NOT be applied outside WinForms.
@@ -489,7 +516,7 @@ This convention exists to improve maintainability in WinForms, not to impose leg
 ### 6.1 Variable Scope and Declaration Placement
 
 - Local variables should be declared at the beginning of a method whenever practical.
-- Variables scoped to blocks may be declared early and initialized to `Nothing` or an empty value when doing so improves readability.
+- Variables scoped to blocks may be declared early and initialized to `Nothing` or an empty value when doing so improves readability without introducing unused state.
 - Exceptions are permitted when early returns prevent unnecessary allocation.
 
 Rationale:
@@ -504,6 +531,36 @@ Rationale:
 - Avoid using generic or ambiguous types (e.g., `Object`) when a concrete type exists.
 - In C#, use of `var` SHOULD be limited to cases where the inferred type is immediately obvious and improves readability.
 - In VB.NET, implicit typing that results in `Object` MUST be avoided.
+
+Examples:
+
+**VB.NET**
+
+Avoid:
+
+```vbnet
+Dim result As Object = GetResult()
+```
+
+Prefer:
+
+```vbnet
+Dim result As ParseResult = GetResult()
+```
+
+**C#**
+
+Avoid:
+
+```csharp
+var result = GetResult();
+```
+
+Prefer:
+
+```csharp
+ParseResult result = GetResult();
+```
 
 Exceptions are permitted only when:
 - Required by reflection or late binding
@@ -543,6 +600,21 @@ Such exceptions MUST be documented inline with rationale.
 - XML documentation comments are required for all public types and members
 - Internal members should be documented where intent is not obvious
 
+All publicly visible members MUST be explicitly documented.
+
+This includes:
+- Public types
+- Public methods
+- Public properties (including read-only properties)
+- Public fields and constants
+- Enum types and individual enum values
+
+Documentation is required even when behavior appears self-evident.
+
+Public APIs are contracts, and contracts must describe intent, meaning, and usage—not just structure.
+
+"Obvious" behavior is considered an implementation detail unless explicitly documented.
+
 XML documentation comments SHOULD make use of:
 - `<summary>` to describe intent
 - `<param>` to explain parameter purpose
@@ -556,6 +628,79 @@ Documentation should explain *why a construct exists*, not merely restate syntax
 When documentation requires multiple conceptual paragraphs, `<para>` elements SHOULD be used instead of relying on line breaks or formatting conventions.
 
 This ensures consistent rendering across IDEs and preserves semantic structure in generated documentation.
+
+Examples:
+
+**VB.NET (Without Documentation):**
+
+```vbnet
+Public Enum EDIFormat
+    Unknown
+    X12
+    EDIFACT
+```
+
+**VB.NET (With Documentation):**
+
+```vbnet
+''' <summary>
+''' Identifies the EDI interchange format.
+''' </summary>
+Public Enum EDIFormat
+    ''' <summary>
+    ''' Format could not be determined from the input data.
+    ''' This value indicates detection failure, not a valid interchange.
+    ''' </summary>
+    Unknown
+
+    ''' <summary>
+    ''' ANSI ASC X12 format.
+    ''' </summary>
+    X12
+
+    ''' <summary>
+    ''' UN/EDIFACT format.
+    ''' </summary>
+    EDIFACT
+End Enum
+```
+
+**C# (Without Documentation):**
+
+```csharp
+public enum EDIFormat
+{
+    Unknown,
+    X12,
+    EDIFACT
+}
+```
+
+**C# (With Documentation):**
+
+```csharp
+/// <summary>
+/// Identifies the EDI interchange format.
+/// </summary>
+public enum EDIFormat
+{
+    /// <summary>
+    /// Format could not be determined from the input data.
+    /// This value indicates detection failure, not a valid interchange.
+    /// </summary>
+    Unknown,
+
+    /// <summary>
+    /// ANSI ASC X12 format.
+    /// </summary>
+    X12,
+
+    /// <summary>
+    /// UN/EDIFACT format.
+    /// </summary>
+    EDIFACT
+}
+```
 
 Rationale:
 - Improves IntelliSense across languages
@@ -578,7 +723,31 @@ Inline comments MUST NOT:
 
 ---
 
-### 7.3 Comment Philosophy
+### 7.3 Block Comments and Comment Scope
+
+VB.NET does not support block comments.
+
+This is considered an intentional design constraint, not a deficiency.
+
+Standards for expressing multi-line commentary are:
+- XML documentation comments (`'''`) for public and protected members
+- Consecutive line comments (`'`) for internal commentary
+- `<para>` elements for multi-paragraph XML documentation
+- `#Region` blocks for structural grouping and navigability
+
+Block-comment style disabling or masking of executable code is discouraged.
+
+If code must be conditionally excluded, it SHOULD be removed or gated explicitly rather than commented out.
+
+Rationale:
+- Prevents accidental execution ambiguity
+- Preserves line-by-line clarity
+- Ensures comments remain readable in plain-text editors
+- Avoids tooling- or formatting-dependent interpretation
+
+---
+
+### 7.4 Comment Philosophy
 
 - Comments should explain why, not what
 - Redundant comments are discouraged
@@ -586,7 +755,7 @@ Inline comments MUST NOT:
 
 ---
 
-### 7.4 External Standards and Business Rule Traceability
+### 7.5 External Standards and Business Rule Traceability
 
 When a design is driven by an external standard, specification, or third-party business rules, the origin of those constraints MUST be documented at the point of implementation.
 
@@ -606,6 +775,26 @@ This documentation MAY appear in:
 - XML documentation comments (`<remarks>`, `<para>`)
 - Inline comments when tightly coupled to a specific line or decision
 - Referenced specifications using `<seealso>` or `<cref>` where appropriate
+
+Examples:
+
+**Implementations**
+
+```vbnet
+''' <remarks>
+''' Implements delimiter detection as defined in
+''' ANSI X12 §2.3.1 (Element Separators).
+''' </remarks>
+```
+
+**Business Rules**
+
+```vbnet
+''' <remarks>
+''' Behavior is driven by third-party settlement rules
+''' provided by <VendorName>, revision 2024-03.
+''' </remarks>
+```
 
 The goal is to ensure that non-obvious design decisions are not mistaken for accidental complexity or poor design.
 
@@ -634,6 +823,8 @@ Rationale:
 
 ## 9. Error Handling and Diagnostics
 
+Diagnostics are defined as structured facts while logging is a consumer concern. As such, logging SHOULD be implemented according to the environment and business rules appropriate to the domain and SHOULD be implemented outside of `Core` or reusable libraries.
+
 ### 9.1 Diagnostics over Exceptions
 
 Libraries should:
@@ -650,6 +841,26 @@ This allows:
 - Partial success scenarios
 - Environment-specific strictness (development vs production)
 
+Examples:
+
+Avoid: throwing for expected, recoverable conditions
+
+**C#**
+
+```csharp
+throw new InvalidOperationException("Invalid record format");
+```
+
+Prefer: emitting diagnostics and continuing
+
+**C#**
+
+```csharp
+diagnostics.Add(Diagnostic.Error(
+    code: "INVALID_FORMAT",
+    message: "Record format does not match expected schema"
+));
+```
 ---
 
 ### 9.2 Severity Model
@@ -728,9 +939,23 @@ SQL is treated as a first-class programming language and is subject to the same 
 
 - Object names MUST be descriptive and domain-relevant.
 - Avoid cryptic abbreviations unless they are domain-standard.
+- Object names MUST conform to the same naming conventions as described in §5 when the SQL environment allows. Specifically:
+  - (§5.1) Acronyms and initialisms MUST be written in ALL CAPS
+  - (§5.2) Object names (tables, columns, schemas, etc.) MUST be written in PascalCase
+  - (§5.5) Schemas (when supported by the SQL environment) MUST be used as a part of the database design structure to define the domain in which the data resides similarly to how namespaces carry the primary semantic meaning in executable code
+- Structural SQL object names represent domain truth and, as such, should read cleanly, descriptively, and without decoration. They MUST NOT contain prefixes or suffixes (`tbl_Customers`, `sch_Inventory`, `col_Address`, etc.)
+- Functional SQL object names MUST include prefixes explicitly defining their usage and intent:
+  - View: `vw_`
+  - Stored Procedure: `usp_` (user-defined)
+  - Scalar Function: `fn_`
+  - Table-Valued Function: `tvf_`
+  - Trigger: `tr_`
 - Mixed-case or reserved identifiers MUST be quoted according to the target dialect:
-  - PostgreSQL: `"Identifier"`
-  - SQL Server: `[Identifier]`
+  - ANSI SQL Standard: `"Identifier"`
+  - PostgreSQL: `"Identifier"` (Double quotes preserve case; Unquoted names are automatically converted to lowercase)
+  - SQL Server (T-SQL): `[Identifier]` (Double quotes work if `QUOTED_IDENTIFIER` is `ON`)
+  - MySQL: `` `Identifier` ``
+  - SQLite: `"Identifier"` or `` `Identifier` ``
 
 Do not rely on implicit case folding or engine-specific quirks.
 
@@ -775,7 +1000,23 @@ Tooling enforcement does not replace human judgment but is intended to support c
 
 Tooling enforcement supports these standards but does not override documented design intent or architectural judgment.
 
-### 14.1 Disabling and Suppressing Compiler Messages
+---
+
+### 14.1 Language-Specific Standards
+
+Language-specific standards are defined only for languages actively used and maintained within Ichthus Development.
+
+For other languages or ecosystems, this document defines architectural principles and expectations rather than prescriptive syntax rules.
+
+---
+
+### 14.2 Framework-Specific Guidance
+
+Framework- or platform-specific guidance (e.g., Blazor, MAUI, UI frameworks) is documented in project- or domain-specific companion specifications rather than in this core standards document.
+
+---
+
+### 14.3 Disabling and Suppressing Compiler Messages
 
 Compiler warning suppression via `#Disable Warning` (VB.NET) or `#pragma warning disable` (C#) is disallowed.
 
@@ -789,11 +1030,11 @@ When a warning must be suppressed intentionally, targeted suppression via langua
 
 Suppressions without documented rationale are considered defects.
 
-This follows the same principle as explicit typing rules (Section 6.2): tooling must not be silenced to compensate for unclear design.
+This follows the same principle as explicit typing rules (§6.2): tooling must not be silenced to compensate for unclear design.
 
 ---
 
-### 14.2 Debugger and IntelliSense Visibility Attributes
+### 14.4 Debugger and IntelliSense Visibility Attributes
 
 Attributes that influence debugger stepping or IntelliSense visibility (e.g., `<DebuggerStepThrough>`, `<EditorBrowsable>`, `<DebuggerBrowsable>`) MAY be used when they improve developer ergonomics without obscuring intent or correctness.
 
@@ -812,6 +1053,27 @@ These attributes MUST NOT be used to:
 - Avoid addressing legitimate tooling warnings or design issues
 
 When applied, the rationale for altering debugger or IntelliSense visibility SHOULD be evident from the surrounding context or documented inline if non-obvious.
+
+---
+
+### 14.5 Languages with Source Transformation or Minification
+
+Some languages and toolchains (e.g., JavaScript, TypeScript, CSS preprocessors) involve source-level transformation, bundling, or minification as part of their build or deployment process.
+
+In such environments:
+- Comments MUST NOT be relied upon to control runtime behavior.
+- Comment-based masking or disabling of executable code is discouraged.
+- Executable intent MUST be expressed through explicit language constructs, configuration, or build-time rules.
+
+When minification or transformation is used:
+- Source code MUST remain readable and intention-revealing prior to transformation.
+- Tooling steps MUST NOT change program semantics beyond what is explicitly configured.
+- Generated or transformed artifacts MUST NOT be treated as authoritative source.
+
+Rationale:
+- Comments are non-semantic and may be removed or altered by tooling.
+- Readability and correctness must be preserved independently of build pipelines.
+- Behavior should be explicit, reviewable, and enforceable at the source level.
 
 ---
 
