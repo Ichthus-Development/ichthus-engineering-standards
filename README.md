@@ -30,7 +30,7 @@ This document intentionally does not attempt to:
 - Guarantee performance, security, or correctness by their existence alone  
   Standards guide design and review; they do not replace engineering judgment, testing, or validation.
 - Define organizational values or ethics  
-  Organizational principles are defined separately (see the Babbagic Code).
+  Organizational principles are defined separately at the parent LLC level (see the *[Gold Fish Bowl, LLC Ethos Collection](https://github.com/GoldFishBowlLLC/Babbagic-Code/blob/main/README.md)*).
 
 ## Relationship to Industry Best Practices
 
